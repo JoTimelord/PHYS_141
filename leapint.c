@@ -23,8 +23,8 @@ char *argv[];
     /* first, set up initial conditions */
 
     n = 1;                      /* set number of points     */
-    x[0] = 1.0;                 /* set initial position     */
-    v[0] = 0.0;                 /* set initial velocity     */
+    x[0] = 0.0;                 /* set initial position     */
+    v[0] = 3.0;                 /* set initial velocity     */
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
@@ -82,7 +82,7 @@ int n;                      /* number of points         */
     int i;
 
     for (i = 0; i < n; i++)         /* loop over all points...  */
-    a[i] = - x[i];              /* use linear force law     */
+    a[i] = - x[i];                  /* use linear force law     */
 }
 
 /*
