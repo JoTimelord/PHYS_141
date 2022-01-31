@@ -15,21 +15,14 @@ import os
 fig = figure(1)
 ax = subplot(111)
 
-data1 = loadtxt('problem1a1.dat',usecols=(0,2,3)) # t, x, v
-data2 = loadtxt('problem1a2.dat',usecols=(0,2,3))
-data3 = loadtxt('problem1a3.dat',usecols=(0,2,3))
-x1= data1[:,1]
-v1= data1[:,2]
-x2= data2[:,1]
-v2= data2[:,2]
-x3= data3[:,1]
-v3= data3[:,2]
+data1 = loadtxt('planetorbitdat/Earth.dat',usecols=(0,1,3)) #t, x, y
+t= data1[:,0]
+x= data1[:,1]
+y= data1[:,2]
 
-xlim(-5,5)
-ylim(-5,5)
-trajectory1, = ax.plot([0],[0],'--', label="1,0")
-trajectory2, = ax.plot([0],[0],'--', label="2,0")
-trajectory3, = ax.plot([0],[0],'--', label="0,3")
+trajectory, = ax.plot([0],[0],'--', label="earth's orbit")
+planet,      = ax.plot([0],[0],'or', ms=10)
+sun,         = ax.plot([0],[0], 'oy', ms=50)
 time_template = 'time = %.1fs'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 show(block=False)
@@ -37,22 +30,20 @@ show(block=False)
 filenames = []
 
 for i in range(len(data1)):
- trajectory1.set_xdata( x1[0:i] )
- trajectory1.set_ydata( v1[0:i] )
- trajectory2.set_xdata( x2[0:i] )
- trajectory2.set_ydata( v2[0:i] )
- trajectory3.set_xdata( x3[0:i] )
- trajectory3.set_ydata( v3[0:i] )
+ planet.set_xdata(x[i])
+ planet.set_ydata(y[i])
+ trajectory.set_xdata( x[0:i] )
+ trajectory.set_ydata( y[0:i] )
  time_text.set_text(time_template % (data1[:,0][i]))
  plt.legend()
- plt.pause(1e-30)
+ plt.pause(1e-3330)
  draw()
  filename = f'{i}.png'
  filenames.append(filename)
  savefig(filename)
 
 # build gif
-with imageio.get_writer('mygif.gif', mode='I') as writer:
+with imageio.get_writer('earthanimation.gif', mode='I') as writer:
     for filename in filenames:
         image = imageio.imread(filename)
         writer.append_data(image)
