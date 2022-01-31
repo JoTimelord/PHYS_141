@@ -23,7 +23,7 @@ y= data1[:,2]
 trajectory, = ax.plot([0],[0],'--', label="earth's orbit")
 planet,      = ax.plot([0],[0],'or', ms=10)
 sun,         = ax.plot([0],[0], 'oy', ms=50)
-time_template = 'time = %.1fs'
+time_template = 'time = %.1fyear'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 show(block=False)
 
@@ -35,8 +35,7 @@ for i in range(len(data1)):
  trajectory.set_xdata( x[0:i] )
  trajectory.set_ydata( y[0:i] )
  time_text.set_text(time_template % (data1[:,0][i]))
- plt.legend()
- plt.pause(1e-3330)
+ plt.pause(1e-30)
  draw()
  filename = f'{i}.png'
  filenames.append(filename)
