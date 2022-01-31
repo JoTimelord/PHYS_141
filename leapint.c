@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define MAXPNT 500             /* maximum number of points */
+#define MAXPNT 100             /* maximum number of points */
 
 void leapstep();                /* routine to take one step */
 
@@ -23,13 +23,13 @@ char *argv[];
     /* first, set up initial conditions */
 
     n = 1;                      /* set number of points     */
-    x[0] = 0.0;                 /* set initial position     */
+    x[0] = 1.0;                 /* set initial position     */
     v[0] = 3.0;                 /* set initial velocity     */
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
 
-    mstep = 256*4;                /* number of steps to take  */
+    mstep = 256;                /* number of steps to take  */
     nout = 4;                   /* steps between outputs    */
     dt = 1.0 / 32.0;            /* timestep for integration */
 

@@ -4,21 +4,14 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
 
 #define MAXPNT 100             /* maximum number of points */
-
-char planetname[] = "Mercury";
-
-double m;
 
 void leapstep();                /* routine to take one step */
 
 void accel();                   /* accel. for harmonic osc. */
 
 void printstate();              /* print out system state   */
-
-void startx();
 
 void main(argc, argv)
 int argc;
@@ -29,17 +22,16 @@ char *argv[];
 
     /* first, set up initial conditions */
 
-    n = 2;                      /* set number of points     */
-    v[0] = 0.0;                 /* set initial velocity     */
-    x[1] = 0;
-    startx(planetname, v, x); 
+    n = 1;                      /* set number of points     */
+    x[0] = 1.0;                 /* set initial position     */
+    v[0] = 3.0;                 /* set initial velocity     */
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
 
-    mstep = 300;                /* number of steps to take  */
-    nout = 1;                   /* steps between outputs    */
-    dt = 0.07;            /* timestep for integration, in year */
+    mstep = 256;                /* number of steps to take  */
+    nout = 4;                   /* steps between outputs    */
+    dt = 1.0 / 32.0;            /* timestep for integration */
 
     /* now, loop performing integration */
 
@@ -88,27 +80,10 @@ double x[];                 /* positions of points      */
 int n;                      /* number of points         */
 {
     int i;
-    double G = 0.00011859645;   /* in AU^3/earthmass/year^2 */ 
-    double M = 332946.05;       /* in earthmass */
-    double r = pow(x[0]*x[0]+x[1]*x[1], 0.5);
+
     for (i = 0; i < n; i++)         /* loop over all points...  */
-        a[i] = - G*M*x[i]/pow(r, 1.5);                  /* use linear force law     */
+    a[i] = - x[i];                  /* use linear force law     */
 }
-
-/*
- * PRINTSTATE: output system state variables.
- */
-
-void printstate(x, v, n, tnow)
-double x[];                 /* positions of all points  */
-double v[];                 /* velocities of all points */
-int n;                      /* number of points         */
-double tnow;                    /* current value of time    */
-{
-
-    printf("%8.4f%12.6f%12.6f%12.6f%12.6f\n", tnow, x[0], v[0], x[1], v[1]);
-}
-
 
 /* findout planets info
  *
@@ -163,22 +138,25 @@ double x[];
         m = 102;
     }
     else if (strcmp(planetname, "Pluto")==0) {
-        e = 0.25;
-        a = 590;
-        v[1] = 3.71*1000;
-        m = 0.0130;
-    }
-    else if (strcmp(planetname, "Mercury")==0) {
-        e = 0.206;
-        a = 5.79;
-        v[1] = 47.36*1000;
-        m = 0.330;
-    }
-    else {
         printf("I should never get here. \n");
     }
     x[0] = a*(1+e)*pow(10,10)/(1.496*pow(10,11)); /* starting position in AU */
-    v[1] = v[1]/(1.496*pow(10,11))*3.156*pow(10,7); 
+    vy[0] = vy[0]/(1.496*pow(10,11))*3.156*pow(10,7); 
 }
 
 
+/*
+ * PRINTSTATE: output system state variables.
+ */
+
+void printstate(x, v, n, tnow)
+double x[];                 /* positions of all points  */
+double v[];                 /* velocities of all points */
+int n;                      /* number of points         */
+double tnow;                    /* current value of time    */
+{
+    int i;
+
+    for (i = 0; i < n; i++)         /* loop over all points...  */
+    printf("%8.4f%4d%12.6f%12.6f\n", tnow, i, x[i], v[i]);
+}
