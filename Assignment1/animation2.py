@@ -20,6 +20,8 @@ t= data1[:,0]
 x= data1[:,1]
 y= data1[:,2]
 
+xlim(-2,2)
+ylim(-2,2)
 trajectory, = ax.plot([0],[0],'--', label="earth's orbit")
 planet,      = ax.plot([0],[0],'or', ms=10)
 sun,         = ax.plot([0],[0], 'oy', ms=50)
