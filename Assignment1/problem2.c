@@ -38,6 +38,8 @@ char *argv[];
     startx(planetname, vy, x);                 /* set initial position     */
     y[0] = 0.0;
     vx[0] = 0.0;
+    double E = 0.5*m*(x[0]*x[0]+y[0]*y[0])-G*M*m/sqrt(x[0]*x[0]+y[0]*y[0]); 
+    printf("The total energy is: %f \n ", E);
 
     /* next, set integration parameters */
 

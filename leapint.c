@@ -29,7 +29,7 @@ char *argv[];
 
     /* next, set integration parameters */
 
-    mstep = 256*4;                /* number of steps to take  */
+    mstep = 256;                /* number of steps to take  */
     nout = 4;                   /* steps between outputs    */
     dt = 1.0 / 32.0;            /* timestep for integration */
 
