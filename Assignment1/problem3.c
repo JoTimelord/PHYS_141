@@ -5,7 +5,7 @@
 #define PI 3.14159265
 double a; // in AU
 double e;
-char planetname[] = "Mars";
+char planetname[] = "Earth";
 
 
 void planetinfo();
@@ -17,7 +17,7 @@ void main()
     double theta[3], r[3], x[3], y[3];
     theta[0]=0;
     double npoint=300;
-    double dtheta=2*PI/npoint;
+    double dtheta=4*PI/npoint;
     planetinfo(planetname);
     for (int i=0; i<npoint; i++){
         analytic(r,theta,x,y,dtheta);
