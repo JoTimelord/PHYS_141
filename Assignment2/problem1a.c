@@ -20,7 +20,7 @@
 int M=pow(10,11); /* in solar mass */
 int G=4.302*pow(10,-6); /* in kiloparsec/solarmass*(km/s)^2 */ 
 double R=1.5; /* in kiloparsec */
-
+double E=-3*PI/64.0d*G*M*M/R
 
 void position();
 double rand_0_1();
@@ -32,13 +32,13 @@ int argc;
 char *argv[];
 {
     FILE *fp;
-    fp=fopen("/Users/yuz102/PHYS_141/Assignment2/1a.dat","w+");
+    fp=fopen("1a.dat","w+");
     double r[4];
     double v[5];
     for (int i=0;i<kMaxParticles;i++) 
     {
         position(r,v);
-        fprintf(fp,"%i%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d\n",i,m,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4]); /* this prints out the index of the star, the mass of the star, r, x, y, z, V, v, w, u, v component of the star */
+        fprintf(fp,"%i%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
         fclose(fp); 
     }
     
@@ -46,13 +46,12 @@ char *argv[];
     return 0;
 }
 
-void position(r,v,m)
+void position(r,v)
 double r[4];
 double v[5];
-double m;
 {
     double q;
-    X1=rand_0_1()*M;
+    X1=rand_0_1();
     r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5);
     X2=rand_0_1();
     r[1]=(1-2*X2)*r[0]; /*  z component */
@@ -74,6 +73,14 @@ double m;
     v[2]=(1-2*X6)*v[1]; /* w component */
     v[3]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
     v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
+    for (int j=0;j<5;j++) 
+    {
+        v[j]=v[j]*64.0d/(3*PI)*pow(abs(E),0.5)/pow(M/G,-0.5);
+    }
+    for (int k=0;k<4;k++)
+    {
+        r[k]=r[k]*3*PI/64.0d*pow(M/G,2)*pow(abs(E),-1);
+    }
 }
 
 void g(q)
