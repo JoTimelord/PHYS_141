@@ -37,25 +37,29 @@ char *argv[];
     fp=fopen("1a.dat","w+");
     double r[4];
     double v[5];
-    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","v component","w component","u component");
+    double E_tot[1];
+    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","v component","w component","u component","Energy");
     for (int i=0;i<kMaxParticles;i++) 
     {
-        position(r,v);
-        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
+        position(r,v,E_tot);
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4],E_tot[1]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
     fclose(fp); 
         
     return 0;
 }
 
-void position(r,v)
+void position(r,v,E_tot)
 double r[];
 double v[];
+double E_tot[];
 {
     double q;
     double X1, X2, X3, X4, X5, X6, X7;
+    double U;
     X1=rand_0_1();
-    r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5);
+    r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
+    U=-G*M/R*pow(1+pow(r[0]/R,2),-0.5); /* in (km/s)^2 */
     X2=rand_0_1();
     r[1]=(1-2*X2)*r[0]; /*  z component */
     X3=rand_0_1();
@@ -84,6 +88,7 @@ double v[];
     {
         r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
     }
+    E_tot[0]=U+v[1]*v[1]/2;
 }
 
 double g(q)
