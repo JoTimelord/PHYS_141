@@ -17,10 +17,11 @@
 
 
 // global variables
-int M=pow(10,11); /* in solar mass */
-int G=4.302*pow(10,-6); /* in kiloparsec/solarmass*(km/s)^2 */ 
+// define a new mass unit = solarmass/(4.302*pow(10,-6))
+double M=pow(10.0,11)*4.302*pow(10,-6); /* in new mass */
+double G=1; /* in kiloparsec/newmass*(km/s)^2 */ 
 double R=1.5; /* in kiloparsec */
-double E=-3*PI/64.0d*G*M*M/R
+double E;
 
 void position();
 double rand_0_1();
@@ -31,26 +32,28 @@ int main(argc, argv)
 int argc;
 char *argv[];
 {
+    E=-3.0*PI/64.0*G*M*M/R; /* in newmass*(km/s)^2 */
     FILE *fp;
     fp=fopen("1a.dat","w+");
     double r[4];
     double v[5];
+    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","v component","w component","u component");
     for (int i=0;i<kMaxParticles;i++) 
     {
         position(r,v);
-        fprintf(fp,"%i%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d%7.11d\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
-        fclose(fp); 
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
-    
+    fclose(fp); 
         
     return 0;
 }
 
 void position(r,v)
-double r[4];
-double v[5];
+double r[];
+double v[];
 {
     double q;
+    double X1, X2, X3, X4, X5, X6, X7;
     X1=rand_0_1();
     r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5);
     X2=rand_0_1();
@@ -75,15 +78,15 @@ double v[5];
     v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
     for (int j=0;j<5;j++) 
     {
-        v[j]=v[j]*64.0d/(3*PI)*pow(abs(E),0.5)/pow(M/G,-0.5);
+        v[j]=v[j]*64.0/(3*PI)*pow(-E,0.5)*pow(M/G,-0.5); /* in km/s */
     }
     for (int k=0;k<4;k++)
     {
-        r[k]=r[k]*3*PI/64.0d*pow(M/G,2)*pow(abs(E),-1);
+        r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
     }
 }
 
-void g(q)
+double g(q)
 double q;
 {
    return q*q*pow(1-q*q, 7.0d/2.0d); 
