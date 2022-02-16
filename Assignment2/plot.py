@@ -17,3 +17,17 @@ plt.grid(True)
 plt.xlim(0, 15.0)
 plt.ylim(0, 1.0)
 plt.savefig("mass_distr.png")
+
+E = np.loadtxt(filename, usecols = (9), skiprows=1)
+n, bins, patches = plt.hist(x, bins='auto', density=True, color='#0504aa', alpha=0.75)
+# plt.plot(x2, rho, 'r', label = 'theoretical distribution of mass density')
+# plt.legend()
+plt.xlabel('energy distribution of points, in (km/s)^2')
+plt.ylabel('Frequency')
+plt.title('energy distribution of points')
+plt.grid(True)
+plt.xlim(0, 15.0)
+plt.ylim(0, 1.0)
+plt.savefig("energy_distr.png")
+
+
