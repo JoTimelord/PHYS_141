@@ -42,7 +42,7 @@ char *argv[];
     for (int i=0;i<kMaxParticles;i++) 
     {
         position(r,v,E_tot);
-        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4],E_tot[1]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[0],r[1],r[2],r[3],v[1],v[2],v[3],v[4],E_tot[0]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
     fclose(fp); 
         
