@@ -7,8 +7,11 @@
 #include <string.h>
 
 #define MAXPNT 200000            /* maximum number of points */
+#define PI 3.141592654
 
-double m;
+double M=pow(10.0,11)*4.302*pow(10,-6); /* in new mass */
+double G=4.302*pow(10,); /* in kiloparsec/newmass*(km/s)^2 */ 
+double R=1.5; /* in kiloparsec */
 
 void leapstep();                /* routine to take one step */
 
@@ -16,7 +19,9 @@ void accel();                   /* accel. for harmonic osc. */
 
 double rand_0_1();              /* generate random numbers */
 
-void initial();                /* generate initial conditions */
+void initial();                 /* generate initial conditions */
+
+double g();                     /* generate q distribution */
 
 void printstate();              /* print out system state   */
 
@@ -25,14 +30,11 @@ int argc;
 char *argv[];
 {
     int n, mstep, nout, nstep;
-    double x[MAXPNT], y[MAXPNT], v[MAXPNT], tnow, dt;
+    double x[MAXPNT], y[MAXPNT], z[MAXPNT], r[MAXPNT], V[MAXPNT], v[MAXPNT], w[MAXPNT], u[MAXPNT], tnow, dt;
 
     /* first, set up initial conditions */
+    void initial(r,x,y,z,V,v,w,u,MAXPNT); /* set initial vel and posi of all points */
 
-    n = 2;                      /* set number of points     */
-    v[0] = 0.0;                 /* set initial velocity     */
-    x[1] = 0;
-    startx(planetname, v, x); 
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
@@ -54,42 +56,45 @@ char *argv[];
 }
 
 /* set up initial conditions */
-void initial(r,v,E_tot)
+void initial(r,x,y,z,V,v,w,u,MAXPNT)
 double r[];
+double x[];
+double y[];
+double z[];
+double V[];
 double v[];
-double E_tot[];
+double u[];
+double w[];
 {
-    double q;
-    double X1, X2, X3, X4, X5, X6, X7;
-    double U;
-    X1=rand_0_1();
-    r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
-    X2=rand_0_1();
-    r[1]=(1-2*X2)*r[0]; /*  z component */
-    X3=rand_0_1();
-    r[2]=pow(r[0]*r[0]-r[1]*r[1],0.5)*cos(2*PI*X3); /* x component */
-    r[3]=pow(r[0]*r[0]-r[1]*r[1],0.5)*sin(2*PI*X3); /* y component */
-    v[0]=pow(2,0.5)*pow(1+r[0]*r[0]/(R**2),-0.25)*sqrt(G*M/R); /* escape velocity */
-    X4=rand_0_1();
-    X5=rand_0_1();
-    while (0.1*X5>=g(X4)) {
+    for (int i=0;i<MAXPNT;i++){
+        double q;
+        double X1, X2, X3, X4, X5, X6, X7;
+        double U;
+        double Ve;
+        X1=rand_0_1();
+        r[i]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
+        X2=rand_0_1();
+        z[i]=(1-2*X2)*r[0]; /*  z component */
+        X3=rand_0_1();
+        x[i]=pow(r[0]*r[0]-r[1]*r[1],0.5)*cos(2*PI*X3); /* x component */
+        y[i]=pow(r[0]*r[0]-r[1]*r[1],0.5)*sin(2*PI*X3); /* y component */
+        Ve=pow(2,0.5)*pow(1+r[0]*r[0]/(R**2),-0.25)*sqrt(G*M/R); /* escape velocity */
         X4=rand_0_1();
         X5=rand_0_1();
+        while (0.1*X5>=g(X4)) {
+            X4=rand_0_1();
+            X5=rand_0_1();
+        }
+        q=X4;
+        X6=rand_0_1();
+        X7=rand_0_1();
+        V[i]=q*v[0]; /* velocity component */
+        w[i]=(1-2*X6)*v[1]; /* w component */
+        u[i]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
+        v[i]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
     }
-    q=X4;
-    X6=rand_0_1();
-    X7=rand_0_1();
-    v[1]=q*v[0]; /* velocity component */
-    v[2]=(1-2*X6)*v[1]; /* w component */
-    v[3]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
-    v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
-    for (int k=0;k<4;k++)
-    {
-        r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
-    }
-    U=-4.302*pow(10,5)/1.5*pow(1+pow(r[0]/1.5,2),-0.5); /* in (km/s)^2 */
-    E_tot[0]=U+v[1]*v[1]/2;
 }
+
 
 double g(q)
 double q;
