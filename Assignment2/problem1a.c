@@ -78,8 +78,7 @@ double E_tot[];
     v[2]=(1-2*X6)*v[1]; /* w component */
     v[3]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
     v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
-    U=-pow(1+pow(r[0],2),-0.5); /* in (km/s)^2 */
-    E_tot[0]=U+v[1]*v[1]/2;
+    U=-G*M/R*pow(1+pow(r[0]/1.5,2),-0.5); /* in (km/s)^2 */
     for (int j=0;j<5;j++) 
     {
         v[j]=v[j]*pow(64/(3*PI),0.5)*pow(-E,0.5)*pow(M,-0.5); /* in km/s */
@@ -88,6 +87,9 @@ double E_tot[];
     {
         r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
     }
+    U=-G*M/R*pow(1+pow(r[0]/1.5,2),-0.5); /* in (km/s)^2 */
+    E_tot[0]=U+v[1]*v[1]/2;
+    
 }
 
 double g(q)
