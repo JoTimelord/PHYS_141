@@ -6,9 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAXPNT 100             /* maximum number of points */
-
-char planetname[] = "Mercury";
+#define MAXPNT 200000            /* maximum number of points */
 
 double m;
 
@@ -16,16 +14,18 @@ void leapstep();                /* routine to take one step */
 
 void accel();                   /* accel. for harmonic osc. */
 
-void printstate();              /* print out system state   */
+double rand_0_1();              /* generate random numbers */
 
-void startx();
+void initial();                /* generate initial conditions */
+
+void printstate();              /* print out system state   */
 
 void main(argc, argv)
 int argc;
 char *argv[];
 {
     int n, mstep, nout, nstep;
-    double x[MAXPNT], v[MAXPNT], tnow, dt;
+    double x[MAXPNT], y[MAXPNT], v[MAXPNT], tnow, dt;
 
     /* first, set up initial conditions */
 
@@ -53,6 +53,54 @@ char *argv[];
     printstate(x, v, n, tnow);      /* then output last step    */
 }
 
+/* set up initial conditions */
+void initial(r,v,E_tot)
+double r[];
+double v[];
+double E_tot[];
+{
+    double q;
+    double X1, X2, X3, X4, X5, X6, X7;
+    double U;
+    X1=rand_0_1();
+    r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
+    X2=rand_0_1();
+    r[1]=(1-2*X2)*r[0]; /*  z component */
+    X3=rand_0_1();
+    r[2]=pow(r[0]*r[0]-r[1]*r[1],0.5)*cos(2*PI*X3); /* x component */
+    r[3]=pow(r[0]*r[0]-r[1]*r[1],0.5)*sin(2*PI*X3); /* y component */
+    v[0]=pow(2,0.5)*pow(1+r[0]*r[0]/(R**2),-0.25)*sqrt(G*M/R); /* escape velocity */
+    X4=rand_0_1();
+    X5=rand_0_1();
+    while (0.1*X5>=g(X4)) {
+        X4=rand_0_1();
+        X5=rand_0_1();
+    }
+    q=X4;
+    X6=rand_0_1();
+    X7=rand_0_1();
+    v[1]=q*v[0]; /* velocity component */
+    v[2]=(1-2*X6)*v[1]; /* w component */
+    v[3]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
+    v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
+    for (int k=0;k<4;k++)
+    {
+        r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
+    }
+    U=-4.302*pow(10,5)/1.5*pow(1+pow(r[0]/1.5,2),-0.5); /* in (km/s)^2 */
+    E_tot[0]=U+v[1]*v[1]/2;
+}
+
+double g(q)
+double q;
+{
+   return q*q*pow(1-q*q, 3.5); 
+}
+
+double rand_0_1(void)
+{
+    return (double) rand()/((double) RAND_MAX);
+}
 /*
  * LEAPSTEP: take one step using the leap-from integrator, formulated
  * as a mapping from t to t + dt.  WARNING: this integrator is not
@@ -109,76 +157,5 @@ double tnow;                    /* current value of time    */
     printf("%8.4f%12.6f%12.6f%12.6f%12.6f\n", tnow, x[0], v[0], x[1], v[1]);
 }
 
-
-/* findout planets info
- *
- */
-void startx(planetname, v, x) 
-char planetname[];
-double v[];
-double x[];
-{
-    double a;  /* semi-major axis */
-    double e;  /* eccentricity    */
-    if (strcmp(planetname, "Jupiter")==0) {
-        e = 0.0485;
-        a = 77.8;      /* unit: 1 m */
-        v[1] = 12.44*1000;   /* unit: 1 m/s */
-        m = 1898.0;      /* unit: 10^24 kg */
-    }
-    else if (strcmp(planetname, "Venus")==0) {
-        e = 0.0068;
-        a = 10.8;
-        v[1] = 34.79*1000;   /* unit: 1 m/s */
-        m = 4.87;
-    }
-    else if (strcmp(planetname, "Mars")==0) {
-        e = 0.0934;
-        a = 22.8;
-        v[1] = 21.97*1000;   /* unit: 1 m/s */
-        m = 0.642;
-    }
-    else if (strcmp(planetname, "Earth")==0) {
-        e = 0.0167;
-        a = 15.0;
-        v[1] = 29.29*1000;   /* unit: 1 m/s */
-        m = 5.97;
-    }
-    else if (strcmp(planetname, "Saturn")==0) {
-        e = 0.0556;
-        a = 143;
-        v[1] = 9.09*1000;   /* unit: 1 m/s */
-        m = 568;
-    }
-    else if (strcmp(planetname, "Uranus")==0) {
-        e = 0.0472;
-        a = 287;
-        v[1] = 6.49*1000;   /* unit: 1 m/s */
-        m = 86.8;
-    }
-    else if (strcmp(planetname, "Neptune")==0) {
-        e = 0.0086;
-        a = 450;
-        v[1] = 5.37*1000;   /* unit: 1 m/s */
-        m = 102;
-    }
-    else if (strcmp(planetname, "Pluto")==0) {
-        e = 0.25;
-        a = 590;
-        v[1] = 3.71*1000;
-        m = 0.0130;
-    }
-    else if (strcmp(planetname, "Mercury")==0) {
-        e = 0.206;
-        a = 5.79;
-        v[1] = 47.36*1000;
-        m = 0.330;
-    }
-    else {
-        printf("I should never get here. \n");
-    }
-    x[0] = a*(1+e)*pow(10,10)/(1.496*pow(10,11)); /* starting position in AU */
-    v[1] = v[1]/(1.496*pow(10,11))*3.156*pow(10,7); 
-}
 
 
