@@ -78,7 +78,7 @@ double E_tot[];
     v[2]=(1-2*X6)*v[1]; /* w component */
     v[3]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
     v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
-    U=-G*M/R*pow(1+pow(r[0]/R,2),-0.5); /* in (km/s)^2 */
+    U=-pow(1+pow(r[0],2),-0.5); /* in (km/s)^2 */
     E_tot[0]=U+v[1]*v[1]/2;
     for (int j=0;j<5;j++) 
     {
