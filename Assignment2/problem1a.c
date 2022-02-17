@@ -59,17 +59,15 @@ double E_tot[];
     double U;
     X1=rand_0_1();
     r[0]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
-    U=-G*M/R*pow(1+pow(r[0]/R,2),-0.5); /* in (km/s)^2 */
     X2=rand_0_1();
     r[1]=(1-2*X2)*r[0]; /*  z component */
     X3=rand_0_1();
     r[2]=pow(r[0]*r[0]-r[1]*r[1],0.5)*cos(2*PI*X3); /* x component */
     r[3]=pow(r[0]*r[0]-r[1]*r[1],0.5)*sin(2*PI*X3); /* y component */
-    v[0]=pow(G,0.5)*pow(2,0.5)*pow(1+r[0]*r[0],-0.25); /* escape velocity */
+    v[0]=pow(2,0.5)*pow(1+r[0]*r[0],-0.25); /* escape velocity */
     X4=rand_0_1();
     X5=rand_0_1();
-    while (0.1*X5>=g(X4))
-    {
+    while (0.1*X5>=g(X4)) {
         X4=rand_0_1();
         X5=rand_0_1();
     }
@@ -82,19 +80,20 @@ double E_tot[];
     v[4]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
     for (int j=0;j<5;j++) 
     {
-        v[j]=v[j]*64.0/(3*PI)*pow(-E,0.5)*pow(M/G,-0.5); /* in km/s */
+        v[j]=v[j]*pow(64/(3*PI),0.5)*pow(-E,0.5)*pow(M,-0.5); /* in km/s */
     }
     for (int k=0;k<4;k++)
     {
         r[k]=r[k]*3*PI/64.0*pow(M,2)/(-E); /* in kiloparsec */
     }
+    U=-G*M/R*pow(1+pow(r[0]/R,2),-0.5); /* in (km/s)^2 */
     E_tot[0]=U+v[1]*v[1]/2;
 }
 
 double g(q)
 double q;
 {
-   return q*q*pow(1-q*q, 7.0d/2.0d); 
+   return q*q*pow(1-q*q, 3.5); 
 }
 
 double rand_0_1(void)
