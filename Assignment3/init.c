@@ -34,7 +34,7 @@ char *argv[];
 {
     E=-3.0*PI/64.0*G*M*M/R; /* in newmass*(km/s)^2 */
     FILE *fp;
-    fp=fopen("1a.dat","w+");
+    fp=fopen("init.dat","w+");
     double r[4];
     double v[5];
     double E_tot[1];

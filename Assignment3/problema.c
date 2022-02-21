@@ -4,14 +4,16 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define MAXPNT 200000            /* maximum number of points */
+#define MAXPNT 400000            /* maximum number of points */
 #define PI 3.141592654
 
 double M=pow(10.0,11)*4.302*pow(10,-6); /* in new mass */
-double G=4.302*pow(10,); /* in kiloparsec/newmass*(km/s)^2 */ 
+double G=4.302*pow(10,-6); /* in kiloparsec/newmass*(km/s)^2 */ 
 double R=1.5; /* in kiloparsec */
+double m=pow(10.0,11)*4.302*pow(10,-6)/200000; /* mass per star */
 
 void leapstep();                /* routine to take one step */
 
@@ -30,33 +32,47 @@ int argc;
 char *argv[];
 {
     int n, mstep, nout, nstep;
-    double x[MAXPNT], y[MAXPNT], z[MAXPNT], r[MAXPNT], V[MAXPNT], v[MAXPNT], w[MAXPNT], u[MAXPNT], tnow, dt;
+    n = 20000;
+    double x[n], y[n], z[n], r[n], V[n], v[n], w[n], u[n], E[n], tnow, dt;
+
+    /* store init.dat */
+    FILE *fp;
+    fp=fopen("init.dat","w+");
 
     /* first, set up initial conditions */
-    void initial(r,x,y,z,V,v,w,u,MAXPNT); /* set initial vel and posi of all points */
-
-    tnow = 0.0;                 /* set initial time         */
-
-    /* next, set integration parameters */
-
-    mstep = 300;                /* number of steps to take  */
-    nout = 1;                   /* steps between outputs    */
-    dt = 0.07;            /* timestep for integration, in year */
-
-    /* now, loop performing integration */
-
-    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
-    if (nstep % nout == 0)          /* if time to output state  */
-        printstate(x, v, n, tnow);      /* then call output routine */
-    leapstep(x, v, n, dt);          /* take integration step    */
-    tnow = tnow + dt;           /* and update value of time */
+    initial(r,x,y,z,V,v,w,u,E,n); /* set initial vel and posi of all points */
+    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","v component","w component","u component","Energy");
+    for (int i=0;i<n;i++) 
+    {
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[i],x[i],y[i],z[i],V[i],v[i],w[i],u[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
-    if (mstep % nout == 0)          /* if last output wanted    */
-    printstate(x, v, n, tnow);      /* then output last step    */
+    fclose(fp); 
+// 
+//    tnow = 0.0;                 /* set initial time         */
+//
+//    /* next, set integration parameters */
+//    mstep = 300;                /* number of steps to take  */
+//    nout = 1;                   /* steps between outputs    */
+//    dt = 0.07;            /* timestep for integration, in year */
+//
+//    /* now, loop performing integration */
+//
+//    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
+//    if (nstep % nout == 0)          /* if time to output state  */
+//        printstate(x, v, n, tnow);      /* then call output routine */
+//    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
+//    tnow = tnow + dt;           /* and update value of time */
+//    }
+//    if (mstep % nout == 0)          /* if last output wanted    */
+//    printstate(x, v, n, tnow);      /* then output last step    */
 }
 
-/* set up initial conditions */
-void initial(r,x,y,z,V,v,w,u,MAXPNT)
+/* set up initial conditions 
+ * The positions are in kiloparsecs
+ * The energies are in (km/s)^2
+ * The velocities are in (km/s)
+ * */
+void initial(r,x,y,z,V,v,w,u,E,n)
 double r[];
 double x[];
 double y[];
@@ -65,20 +81,23 @@ double V[];
 double v[];
 double u[];
 double w[];
+double E[];
+int n;
 {
-    for (int i=0;i<MAXPNT;i++){
+    for (int i=0;i<n;i++){
         double q;
         double X1, X2, X3, X4, X5, X6, X7;
         double U;
         double Ve;
         X1=rand_0_1();
-        r[i]=pow(pow(X1,-2.0d/3.0d)-1,-0.5); /* radius */
+        double K=pow(X1*pow(R,3)/M,2.0d/3.0d);
+        r[i]=pow(K*R*R/(R*R-K),0.5); /* radius */
         X2=rand_0_1();
-        z[i]=(1-2*X2)*r[0]; /*  z component */
+        z[i]=(1-2*X2)*r[i]; /*  z component */
         X3=rand_0_1();
-        x[i]=pow(r[0]*r[0]-r[1]*r[1],0.5)*cos(2*PI*X3); /* x component */
-        y[i]=pow(r[0]*r[0]-r[1]*r[1],0.5)*sin(2*PI*X3); /* y component */
-        Ve=pow(2,0.5)*pow(1+r[0]*r[0]/(R**2),-0.25)*sqrt(G*M/R); /* escape velocity */
+        x[i]=pow(r[i]*r[i]-r[i]*r[i],0.5)*cos(2*PI*X3); /* x component */
+        y[i]=pow(r[i]*r[i]-r[i]*r[i],0.5)*sin(2*PI*X3); /* y component */
+        Ve=pow(2,0.5)*pow(1+r[i]*r[i]/(R*R),-0.25)*sqrt(G*M/R); /* escape velocity */
         X4=rand_0_1();
         X5=rand_0_1();
         while (0.1*X5>=g(X4)) {
@@ -88,14 +107,18 @@ double w[];
         q=X4;
         X6=rand_0_1();
         X7=rand_0_1();
-        V[i]=q*v[0]; /* velocity component */
-        w[i]=(1-2*X6)*v[1]; /* w component */
-        u[i]=pow(v[1]*v[1]-v[2]*v[2],0.5)*cos(2*PI*X7); /* u component */
-        v[i]=pow(v[1]*v[1]-v[2]*v[2],0.5)*sin(2*PI*X7); /* v component */
+        V[i]=q*Ve; /* velocity component */
+        w[i]=(1-2*X6)*V[i]; /* w component */
+        u[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*cos(2*PI*X7); /* u component */
+        v[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*sin(2*PI*X7); /* v component */
+        U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5);
+        E[i]=U+V[i]*V[i];
     }
 }
 
-
+/*
+ * Probability distribution functions
+ */
 double g(q)
 double q;
 {
@@ -106,46 +129,78 @@ double rand_0_1(void)
 {
     return (double) rand()/((double) RAND_MAX);
 }
+
 /*
  * LEAPSTEP: take one step using the leap-from integrator, formulated
  * as a mapping from t to t + dt.  WARNING: this integrator is not
  * accurate unless the timestep dt is fixed from one call to another.
  */
 
-void leapstep(x, v, n, dt)
-double x[];                 /* positions of all points  */
-double v[];                 /* velocities of all points */
+void leapstep(r, x, y, z, V, w, v, u, n, dt)
+double r[];                 /* r-positions of all points  */
+double x[];                 /* x-positions of all points  */
+double y[];                 /* y-positions of all points  */
+double z[];                 /* z-positions of all points  */
+double V[];                 /* velocities of all points */
+double w[];                 /* z velocities of all points */
+double v[];                 /* y velocities of all points */
+double u[];                 /* x velocities of all points */
 int n;                      /* number of points         */
 double dt;                  /* timestep for integration */
 {
     int i;
-    double a[MAXPNT];
-
-    accel(a, x, n);             /* call acceleration code   */
+    double a[n],ax[n],ay[n],az[n];
+    accel(a, ax, ay, az, r, x, y, z, n); /* call acceleration code   */
     for (i = 0; i < n; i++)         /* loop over all points...  */
-    v[i] = v[i] + 0.5 * dt * a[i];      /* advance vel by half-step */
+    {
+        V[i] = V[i] + 0.5 * dt * a[i];      /* advance vel by half-step */
+        w[i] = w[i] + 0.5 * dt * az[i];      
+        u[i] = u[i] + 0.5 * dt * ax[i];      
+        v[i] = v[i] + 0.5 * dt * ay[i];      
+    }
     for (i = 0; i < n; i++)         /* loop over points again...*/
-    x[i] = x[i] + dt * v[i];        /* advance pos by full-step */
-    accel(a, x, n);             /* call acceleration code   */
-    for (i = 0; i < n; i++)         /* loop over all points...  */
-    v[i] = v[i] + 0.5 * dt * a[i];      /* and complete vel. step   */
+    {
+        r[i] = r[i] + dt * V[i];        /* advance pos by full-step */
+        x[i] = x[i] + dt * u[i];        
+        y[i] = y[i] + dt * v[i];        
+        z[i] = z[i] + dt * w[i];        
+    }
+    accel(a, ax, ay, az, r, x, y, z, n);             /* call acceleration code   */
+    for (i = 0; i < n; i++)             /* loop over all points...  */
+    {
+        V[i] = V[i] + 0.5 * dt * a[i];      /* advance vel by half-step */
+        w[i] = w[i] + 0.5 * dt * az[i];      
+        u[i] = u[i] + 0.5 * dt * ax[i];      
+        v[i] = v[i] + 0.5 * dt * ay[i];      
+    }
 }
 
 /*
  * ACCEL: compute accelerations for harmonic oscillator(s).
  */
 
-void accel(a, x, n)
+void accel(a, ax, ay, az, r, x, y, z, n)
 double a[];                 /* accelerations of points  */
-double x[];                 /* positions of points      */
-int n;                      /* number of points         */
+double ax[];                 /* x accelerations of points  */
+double ay[];                 /* y accelerations of points  */
+double az[];                 /* z accelerations of points  */
+double r[];                 /* r acceleration of points */
+double x[];                 /* x acceleration of points */
+double y[];                 /* y acceleration of points */
+double z[];                 /* z acceleration of points */
+int n;                      /* index of points         */
 {
-    int i;
-    double G = 0.00011859645;   /* in AU^3/earthmass/year^2 */ 
-    double M = 332946.05;       /* in earthmass */
-    double r = pow(x[0]*x[0]+x[1]*x[1], 0.5);
-    for (i = 0; i < n; i++)         /* loop over all points...  */
-        a[i] = - G*M*x[i]/pow(r, 1.5);                  /* use linear force law     */
+    for (int i=0;i<n;i++){ /* calculate acceleration for every point i */
+        for (int j=0;j<n;j++){ /* calculate acceleration exerted on i by every other point */
+            if (i!=j){
+                double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2));
+                a[i]=a[i]-G*m/pow(rij,2);
+                az[i]=az[i]+a[i]*(z[j]-z[i])/rij;
+                ax[i]=ax[i]+a[i]*(x[j]-x[i])/rij;
+                ay[i]=ay[i]+a[i]*(y[j]-y[i])/rij;
+            }
+        }
+    }
 }
 
 /*
