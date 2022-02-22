@@ -11,7 +11,6 @@
 #define PI 3.141592654
 
 double M=pow(10.0,11)*4.302*pow(10,-6); /* in new mass */
-double G=4.302*pow(10,-6); /* in kiloparsec/newmass*(km/s)^2 */ 
 double R=1.5; /* in kiloparsec */
 double m=pow(10.0,11)*4.302*pow(10,-6)/200000; /* mass per star */
 
@@ -47,24 +46,24 @@ char *argv[];
         fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[i],x[i],y[i],z[i],V[i],v[i],w[i],u[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
     fclose(fp); 
-// 
-//    tnow = 0.0;                 /* set initial time         */
-//
-//    /* next, set integration parameters */
-//    mstep = 300;                /* number of steps to take  */
-//    nout = 1;                   /* steps between outputs    */
-//    dt = 0.07;            /* timestep for integration, in year */
-//
-//    /* now, loop performing integration */
-//
-//    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
-//    if (nstep % nout == 0)          /* if time to output state  */
-//        printstate(x, v, n, tnow);      /* then call output routine */
-//    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
-//    tnow = tnow + dt;           /* and update value of time */
-//    }
-//    if (mstep % nout == 0)          /* if last output wanted    */
-//    printstate(x, v, n, tnow);      /* then output last step    */
+ 
+    tnow = 0.0;                 /* set initial time         */
+
+    /* next, set integration parameters */
+    mstep = 400;                /* number of steps to take  */
+    nout = 1;                   /* steps between outputs    */
+    dt = 0.07;            /* timestep for integration, in year */
+
+    /* now, loop performing integration */
+
+    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
+    if (nstep % nout == 0)          /* if time to output state  */
+        printstate(x, v, n, tnow);      /* then call output routine */
+    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
+    tnow = tnow + dt;           /* and update value of time */
+    }
+    if (mstep % nout == 0)          /* if last output wanted    */
+    printstate(x, v, n, tnow);      /* then output last step    */
 }
 
 /* set up initial conditions 
@@ -89,14 +88,14 @@ int n;
         double X1, X2, X3, X4, X5, X6, X7;
         double U;
         double Ve;
+        double G=4.302*pow(10,-6); /* in kiloparsec/newmass*(km/s)^2 */ 
         X1=rand_0_1();
-        double K=pow(X1*pow(R,3)/M,2.0d/3.0d);
-        r[i]=pow(K*R*R/(R*R-K),0.5); /* radius */
+        r[i]=sqrt(R*R*pow(X1,2.0d/3.0d)/(1-pow(X1,2.0d/3.0d))); /* radius */
         X2=rand_0_1();
         z[i]=(1-2*X2)*r[i]; /*  z component */
         X3=rand_0_1();
-        x[i]=pow(r[i]*r[i]-r[i]*r[i],0.5)*cos(2*PI*X3); /* x component */
-        y[i]=pow(r[i]*r[i]-r[i]*r[i],0.5)*sin(2*PI*X3); /* y component */
+        x[i]=pow(r[i]*r[i]-z[i]*z[i],0.5)*cos(2*PI*X3); /* x component */
+        y[i]=pow(r[i]*r[i]-z[i]*z[i],0.5)*sin(2*PI*X3); /* y component */
         Ve=pow(2,0.5)*pow(1+r[i]*r[i]/(R*R),-0.25)*sqrt(G*M/R); /* escape velocity */
         X4=rand_0_1();
         X5=rand_0_1();
@@ -150,6 +149,7 @@ double dt;                  /* timestep for integration */
 {
     int i;
     double a[n],ax[n],ay[n],az[n];
+    double G=4.49348*pow(10,-15); /* in parsec^3/(solarmass*yr^2) */
     accel(a, ax, ay, az, r, x, y, z, n); /* call acceleration code   */
     for (i = 0; i < n; i++)         /* loop over all points...  */
     {
@@ -193,8 +193,9 @@ int n;                      /* index of points         */
     for (int i=0;i<n;i++){ /* calculate acceleration for every point i */
         for (int j=0;j<n;j++){ /* calculate acceleration exerted on i by every other point */
             if (i!=j){
-                double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2));
-                a[i]=a[i]-G*m/pow(rij,2);
+                double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2))*1000; /* in parsec */
+                double G=4.49348*pow(10,-15); /* in parsec^3/(solarmass*yr^2) */
+                a[i]=a[i]-G*m/(rij*rij); /* in parsec per year */
                 az[i]=az[i]+a[i]*(z[j]-z[i])/rij;
                 ax[i]=ax[i]+a[i]*(x[j]-x[i])/rij;
                 ay[i]=ay[i]+a[i]*(y[j]-y[i])/rij;

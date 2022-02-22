@@ -15,8 +15,6 @@ ax1.set_xlabel('radial distance from the origin, kparsec')
 ax1.set_ylabel('Mass density (unit = 10^11 solarmass)')
 ax1.set_title('(normalized) mass density distribution of the radial distance')
 ax1.grid(True)
-ax1.set_xlim(0, 15.0)
-ax1.set_ylim(0, 1.0)
 fig1.savefig("mass_distr.png")
 
 E = np.loadtxt(filename, usecols = (9), skiprows=1)
