@@ -15,9 +15,10 @@ ax1.set_xlabel('radial distance from the origin, kparsec')
 ax1.set_ylabel('Mass density (unit = 10^11 solarmass)')
 ax1.set_title('(normalized) mass density distribution of the radial distance')
 ax1.grid(True)
+<<<<<<< HEAD
 ax1.set_xlim(0, 15.0)
 ax1.set_ylim(0, 1.0)
-fig1.savefig("trial/mass_distr.png")
+fig1.savefig("mass_distr.png")
 
 E = np.loadtxt(filename, usecols = (9), skiprows=1)
 E = E/1000000 # put the energy at (Mm/s)^2
@@ -32,6 +33,6 @@ ax2.set_xlabel('energy distribution of points, in 10^6(km/s)^2')
 ax2.set_ylabel('Frequency')
 ax2.set_title('energy distribution of points')
 ax2.grid(True)
-fig2.savefig("trial/energy_distr.png")
+fig2.savefig("energy_distr.png")
 
 
