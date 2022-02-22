@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # An "interface" to matplotlib.axes.Axes.hist() method
-filename = "1a.dat"
+filename = "init.dat"
 x = np.loadtxt(filename, usecols = (1), skiprows=1)
 x2 = np.linspace(0, 17, 100000)
 rho = 3.0/(4.0*math.pi)*1.5**(-3)*(1+(x2/1.5)**2)**(-5.0/2.0)*4*math.pi*x2**2 # since mass density, treat total mass as 1
@@ -17,7 +17,7 @@ ax1.set_title('(normalized) mass density distribution of the radial distance')
 ax1.grid(True)
 ax1.set_xlim(0, 15.0)
 ax1.set_ylim(0, 1.0)
-fig1.savefig("mass_distr.png")
+fig1.savefig("trial/mass_distr.png")
 
 E = np.loadtxt(filename, usecols = (9), skiprows=1)
 E = E/1000000 # put the energy at (Mm/s)^2
@@ -32,6 +32,6 @@ ax2.set_xlabel('energy distribution of points, in 10^6(km/s)^2')
 ax2.set_ylabel('Frequency')
 ax2.set_title('energy distribution of points')
 ax2.grid(True)
-fig2.savefig("energy_distr.png")
+fig2.savefig("trial/energy_distr.png")
 
 
