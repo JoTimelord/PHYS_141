@@ -6,13 +6,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#define MAXPNT 400000            /* maximum number of points */
+#define MAXPNT 40000            /* maximum number of points */
 #define PI 3.141592654
 
-double M=pow(10.0,11)*4.302*pow(10,-6); /* in new mass */
-double R=1.5; /* in kiloparsec */
-double m=pow(10.0,11)*4.302*pow(10,-6)/200000; /* mass per star */
+double M=pow(10.0,11); /* in solar mass */
+double G=4.30091*pow(10,-3)*pow(1.02201*pow(10,-6),2); /* in parsec^3/(solarmass*yr^2) */
+double R=1.5*1000; /* in parsec */
+double m=pow(10.0,11)/200000; /* mass per star */
 
 void leapstep();                /* routine to take one step */
 
@@ -31,22 +33,36 @@ int argc;
 char *argv[];
 {
     int n, mstep, nout, nstep;
-    n = 20000;
-    double x[n], y[n], z[n], r[n], V[n], v[n], w[n], u[n], E[n], tnow, dt;
+    double eta, tmax, episqr;
+    double x[MAXPNT], y[MAXPNT], z[MAXPNT], r[MAXPNT], V[MAXPNT], v[MAXPNT], w[MAXPNT], u[MAXPNT], E[MAXPNT], tnow, dt;
 
+    eta=0.02;
+    n=20000;
+    tmax=5; 
+    episqr=0.25;
+    dt=0.1; /* in year */
+    
     /* store init.dat */
     FILE *fp;
     fp=fopen("init.dat","w+");
 
     /* first, set up initial conditions */
     initial(r,x,y,z,V,v,w,u,E,n); /* set initial vel and posi of all points */
-    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","v component","w component","u component","Energy");
+    fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","vx component","vy component","vz component","Energy");
     for (int i=0;i<n;i++) 
     {
-        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[i],x[i],y[i],z[i],V[i],v[i],w[i],u[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[i],x[i],y[i],z[i],V[i],u[i],v[i],w[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
     fclose(fp); 
- 
+    FILE *fp2;
+    fp2=fopen("init_aaserth.data","w+");
+    fprintf(fp2,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f\n",n,eta,dt,tmax,episqr);
+    for (int i=0;i<n;i++)
+    {
+        fprintf(fp2,"%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
+    } /* mass, x, y, z, vx, vy, vz */
+    fclose(fp2);
+
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
@@ -54,16 +70,20 @@ char *argv[];
     nout = 1;                   /* steps between outputs    */
     dt = 0.07;            /* timestep for integration, in year */
 
-    /* now, loop performing integration */
+    FILE *fp3;
+    fp3=fopen("initplummer.data","w+");
+    printstate(x, y, z, u, v, w, n, tnow, fp3); /* output last step */
 
-    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
-    if (nstep % nout == 0)          /* if time to output state  */
-        printstate(x, v, n, tnow);      /* then call output routine */
-    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
-    tnow = tnow + dt;           /* and update value of time */
-    }
-    if (mstep % nout == 0)          /* if last output wanted    */
-    printstate(x, v, n, tnow);      /* then output last step    */
+//    /* now, loop performing integration */
+//
+//    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
+//    if (nstep % nout == 0)          /* if time to output state  */
+//        printstate(x, v, n, tnow);      /* then call output routine */
+//    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
+//    tnow = tnow + dt;           /* and update value of time */
+//    }
+//    if (mstep % nout == 0)          /* if last output wanted    */
+//    printstate(x, y, z, u, v, w, n, tnow, fp) /* output last step */
 }
 
 /* set up initial conditions 
@@ -88,15 +108,14 @@ int n;
         double X1, X2, X3, X4, X5, X6, X7;
         double U;
         double Ve;
-        double G=4.302*pow(10,-6); /* in kiloparsec/newmass*(km/s)^2 */ 
         X1=rand_0_1();
-        r[i]=sqrt(R*R*pow(X1,2.0d/3.0d)/(1-pow(X1,2.0d/3.0d))); /* radius */
+        r[i]=sqrt(R*R*pow(X1,2.0d/3.0d)/(1-pow(X1,2.0d/3.0d))); /* radius in parsec */
         X2=rand_0_1();
         z[i]=(1-2*X2)*r[i]; /*  z component */
         X3=rand_0_1();
         x[i]=pow(r[i]*r[i]-z[i]*z[i],0.5)*cos(2*PI*X3); /* x component */
         y[i]=pow(r[i]*r[i]-z[i]*z[i],0.5)*sin(2*PI*X3); /* y component */
-        Ve=pow(2,0.5)*pow(1+r[i]*r[i]/(R*R),-0.25)*sqrt(G*M/R); /* escape velocity */
+        Ve=pow(2,0.5)*pow(1+r[i]*r[i]/(R*R),-0.25)*sqrt(G*M/R); /* escape velocity in parsec/yr */
         X4=rand_0_1();
         X5=rand_0_1();
         while (0.1*X5>=g(X4)) {
@@ -110,8 +129,9 @@ int n;
         w[i]=(1-2*X6)*V[i]; /* w component */
         u[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*cos(2*PI*X7); /* u component */
         v[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*sin(2*PI*X7); /* v component */
-        U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5);
-        E[i]=U+V[i]*V[i];
+        U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5); /* in (parsec/year)^2 */
+        E[i]=U+V[i]*V[i]/2;
+        E[i]=E[i]*pow(978462,2); /* in km/s */
     }
 }
 
@@ -149,7 +169,6 @@ double dt;                  /* timestep for integration */
 {
     int i;
     double a[n],ax[n],ay[n],az[n];
-    double G=4.49348*pow(10,-15); /* in parsec^3/(solarmass*yr^2) */
     accel(a, ax, ay, az, r, x, y, z, n); /* call acceleration code   */
     for (i = 0; i < n; i++)         /* loop over all points...  */
     {
@@ -193,8 +212,7 @@ int n;                      /* index of points         */
     for (int i=0;i<n;i++){ /* calculate acceleration for every point i */
         for (int j=0;j<n;j++){ /* calculate acceleration exerted on i by every other point */
             if (i!=j){
-                double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2))*1000; /* in parsec */
-                double G=4.49348*pow(10,-15); /* in parsec^3/(solarmass*yr^2) */
+                double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2)); /* in parsec */
                 a[i]=a[i]-G*m/(rij*rij); /* in parsec per year */
                 az[i]=az[i]+a[i]*(z[j]-z[i])/rij;
                 ax[i]=ax[i]+a[i]*(x[j]-x[i])/rij;
@@ -208,14 +226,22 @@ int n;                      /* index of points         */
  * PRINTSTATE: output system state variables.
  */
 
-void printstate(x, v, n, tnow)
+void printstate(x, y, z, u, v, w, n, tnow, fp)
 double x[];                 /* positions of all points  */
-double v[];                 /* velocities of all points */
+double y[];                 
+double z[];                 
+double u[];                 /* velocities of all points */
+double v[];                 
+double w[];                 
 int n;                      /* number of points         */
-double tnow;                    /* current value of time    */
+double tnow;                /* current value of time    */
+FILE *fp;                   /* the file name to store everything in */ 
 {
-
-    printf("%8.4f%12.6f%12.6f%12.6f%12.6f\n", tnow, x[0], v[0], x[1], v[1]);
+    /* print header */
+    fprintf(fp,"%-7d%-14.4f\n",n,tnow);
+    for (int i=0;i<n;i++){
+        fprintf(fp,"%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
+    }
 }
 
 
