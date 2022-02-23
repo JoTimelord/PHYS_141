@@ -28,6 +28,8 @@ double g();                     /* generate q distribution */
 
 void printstate();              /* print out system state   */
 
+void printenergy();             /* verify that the energy of the system does not change */
+
 void main(argc, argv)
 int argc;
 char *argv[];
@@ -35,12 +37,13 @@ char *argv[];
     int n, mstep, nout, nstep;
     double eta, tmax, episqr;
     double x[MAXPNT], y[MAXPNT], z[MAXPNT], r[MAXPNT], V[MAXPNT], v[MAXPNT], w[MAXPNT], u[MAXPNT], E[MAXPNT], tnow, dt;
+    double Eanalytic;
 
     eta=0.02;
     n=20000;
     tmax=5; 
     episqr=0.25;
-    dt=0.1; /* in year */
+    Eanalytic=-3*PI/64*G*M*M/R*pow(978462,2); /* in solarmass*(km/s)^2 */
     
     /* store init.dat */
     FILE *fp;
@@ -66,24 +69,45 @@ char *argv[];
     tnow = 0.0;                 /* set initial time         */
 
     /* next, set integration parameters */
-    mstep = 400;                /* number of steps to take  */
+    mstep = 5;                /* number of steps to take  */
     nout = 1;                   /* steps between outputs    */
-    dt = 0.07;            /* timestep for integration, in year */
+    dt = 5;            /* timestep for integration, in year */
 
     FILE *fp3;
     fp3=fopen("initplummer.data","w+");
-    printstate(x, y, z, u, v, w, n, tnow, fp3); /* output last step */
+    printstate(x, y, z, u, v, w, n, tnow, fp3);
+    fclose(fp3);
 
-//    /* now, loop performing integration */
-//
-//    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
-//    if (nstep % nout == 0)          /* if time to output state  */
-//        printstate(x, v, n, tnow);      /* then call output routine */
-//    leapstep(r, x, y, z, V, w, v, u, n, dt); /* take integration step    */
-//    tnow = tnow + dt;           /* and update value of time */
-//    }
-//    if (mstep % nout == 0)          /* if last output wanted    */
-//    printstate(x, y, z, u, v, w, n, tnow, fp) /* output last step */
+    /* This is the file to check that the energy produced matches that of equation 6 (for problem a and b) */
+    FILE *fp4;
+    fp4=fopen("energy.dat","w+");
+    fprintf(fp4,"This file contains the energy and totol momentum calculated from leapfrog code with time step as 5 years and total steps as 5.\n");
+    fprintf(fp4,"This is the analytic energy of the plummer sphere over time: %14.4e\n",Eanalytic);
+    fprintf(fp4,"The energy is in solarmass*(km/s)^2, and the momentum is in solarmass*parsec/yr.\n");
+    fprintf(fp4,"%-14.4s%-14.4s%-14.4s\n","timenow","Energy","tot_moment");
+    fprintf(fp4,"This is the check for momentum and energy conservation, as well as the fact that leapfrog produces energy as analytic form predicts.\n");
+
+    /* now, loop performing integration */
+    FILE *fp5;
+    fp5=fopen("evolution.dat","w+");
+    fprintf(fp5,"%-7d%-14.4f\n",n,tnow);
+
+    for (nstep = 0; nstep < mstep; nstep++) {   /* loop mstep times in all  */
+        if (nstep % nout == 0)          /* if time to output state  */
+        {
+            printenergy(E, fp4, u, v, w, tnow, n);   
+           // printstate(x, y, z, u, v, w, n, fp5); /* then call output routine */
+        }
+        leapstep(r, x, y, z, V, w, v, u, E, n, dt); /* take integration step    */
+        tnow = tnow + dt;           /* and update value of time */
+    }
+    if (mstep % nout == 0) /* if last output wanted    */
+    {
+        printenergy(E, fp4, u, v, w, tnow, n); 
+        // printstate(x, y, z, u, v, w, n, tnow, fp5); /* output last step */
+    }              
+    fclose(fp4);
+    fclose(fp5);
 }
 
 /* set up initial conditions 
@@ -131,7 +155,7 @@ int n;
         v[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*sin(2*PI*X7); /* v component */
         U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5); /* in (parsec/year)^2 */
         E[i]=U+V[i]*V[i]/2;
-        E[i]=E[i]*pow(978462,2); /* in km/s */
+        E[i]=E[i]*pow(978462,2); /* in (km/s)^2 */
     }
 }
 
@@ -155,7 +179,7 @@ double rand_0_1(void)
  * accurate unless the timestep dt is fixed from one call to another.
  */
 
-void leapstep(r, x, y, z, V, w, v, u, n, dt)
+void leapstep(r, x, y, z, V, w, v, u, E, n, dt)
 double r[];                 /* r-positions of all points  */
 double x[];                 /* x-positions of all points  */
 double y[];                 /* y-positions of all points  */
@@ -164,11 +188,13 @@ double V[];                 /* velocities of all points */
 double w[];                 /* z velocities of all points */
 double v[];                 /* y velocities of all points */
 double u[];                 /* x velocities of all points */
+double E[];                 /* energy of all points */
 int n;                      /* number of points         */
 double dt;                  /* timestep for integration */
 {
     int i;
     double a[n],ax[n],ay[n],az[n];
+    double U;
     accel(a, ax, ay, az, r, x, y, z, n); /* call acceleration code   */
     for (i = 0; i < n; i++)         /* loop over all points...  */
     {
@@ -192,6 +218,10 @@ double dt;                  /* timestep for integration */
         u[i] = u[i] + 0.5 * dt * ax[i];      
         v[i] = v[i] + 0.5 * dt * ay[i];      
     }
+    U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5); /* in (parsec/year)^2 */
+    E[i]=U+V[i]*V[i]/2;
+    E[i]=E[i]*pow(978462,2); /* in km/s */
+
 }
 
 /*
@@ -210,6 +240,10 @@ double z[];                 /* z acceleration of points */
 int n;                      /* index of points         */
 {
     for (int i=0;i<n;i++){ /* calculate acceleration for every point i */
+        a[i]=0;
+        ax[i]=0;
+        ay[i]=0;
+        az[i]=0;
         for (int j=0;j<n;j++){ /* calculate acceleration exerted on i by every other point */
             if (i!=j){
                 double rij=sqrt(pow(x[i]-x[j],2)+pow(y[i]-y[j],2)+pow(z[i]-z[j],2)); /* in parsec */
@@ -226,23 +260,50 @@ int n;                      /* index of points         */
  * PRINTSTATE: output system state variables.
  */
 
-void printstate(x, y, z, u, v, w, n, tnow, fp)
+void printstate(x, y, z, u, v, w, n, fp)
 double x[];                 /* positions of all points  */
 double y[];                 
 double z[];                 
 double u[];                 /* velocities of all points */
 double v[];                 
 double w[];                 
-int n;                      /* number of points         */
-double tnow;                /* current value of time    */
+double n;
 FILE *fp;                   /* the file name to store everything in */ 
 {
-    /* print header */
-    fprintf(fp,"%-7d%-14.4f\n",n,tnow);
     for (int i=0;i<n;i++){
-        fprintf(fp,"%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
+        fprintf(fp,"%-14.4f%E%E%E%E%E%E\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
     }
 }
 
 
+
+/* 
+ * printenergy: output system energy to make sure it stays the same.
+ */
+
+void printenergy(E, fp, u, v, w, tnow, n)
+double E[];
+FILE *fp;
+double u[];
+double v[];
+double w[];
+double tnow;
+int n;
+{
+    double Energy=0;
+    double uMomentum=0;
+    double vMomentum=0;
+    double wMomentum=0;
+    double MomentumTotal=0;
+    for (int i=0;i<n;i++)
+    {
+        Energy+=E[i]; /* (km/s)^2 */
+        uMomentum+=u[i];
+        vMomentum+=v[i];
+        wMomentum+=w[i];
+    }
+    Energy=Energy*m; /* in solarmass*(km/s)^2 */
+    MomentumTotal=sqrt(pow(uMomentum,2)+pow(wMomentum,2)+pow(vMomentum,2))*m;
+    fprintf(fp, "%-14.4f%-17.7E%-17.7E\n",tnow,Energy,MomentumTotal);
+}
 

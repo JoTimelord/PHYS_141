@@ -48,7 +48,7 @@ int main()
 {
     /* the input file can either be a file or the standard input */
     /*inputFile = stdin;*/
-    inputFile = fopen("init.dat", "r");
+    inputFile = fopen("init_aaserth.data", "r");
 
     readParameters();
     readParticles();
