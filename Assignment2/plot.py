@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 # An "interface" to matplotlib.axes.Axes.hist() method
-filename = "1a.dat"
+filename = "init.dat"
 x = np.loadtxt(filename, usecols = (1), skiprows=1)
 x2 = np.linspace(0, 17, 100000)
 rho = 3.0/(4.0*math.pi)*1.5**(-3)*(1+(x2/1.5)**2)**(-5.0/2.0)*4*math.pi*x2**2 # since mass density, treat total mass as 1
@@ -15,6 +15,9 @@ ax1.set_xlabel('radial distance from the origin, kparsec')
 ax1.set_ylabel('Mass density (unit = 10^11 solarmass)')
 ax1.set_title('(normalized) mass density distribution of the radial distance')
 ax1.grid(True)
+<<<<<<< HEAD
+ax1.set_xlim(0, 15.0)
+ax1.set_ylim(0, 1.0)
 fig1.savefig("mass_distr.png")
 
 E = np.loadtxt(filename, usecols = (9), skiprows=1)
