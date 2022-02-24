@@ -11,10 +11,7 @@
 #define MAXPNT 40000            /* maximum number of points */
 #define PI 3.141592654
 
-double M=pow(10.0,11); /* in solar mass */
-double G=4.30091*pow(10,-3)*pow(1.02201*pow(10,-6),2); /* in parsec^3/(solarmass*yr^2) */
-double R=1.5*1000; /* in parsec */
-double m=pow(10.0,11)/200000; /* mass per star */
+double M,G,R,m;
 
 void leapstep();                /* routine to take one step */
 
@@ -39,12 +36,25 @@ char *argv[];
     double x[MAXPNT], y[MAXPNT], z[MAXPNT], r[MAXPNT], V[MAXPNT], v[MAXPNT], w[MAXPNT], u[MAXPNT], E[MAXPNT], tnow, dt;
     double Eanalytic;
 
+    /* define values of global variables */
+    M=pow(10.0,11)*4.30091*pow(10,-3)*pow(1.02201*pow(10,-6),2); /* in new mass */
+    G=1; /* in parsec^3/(newmass*yr^2) */
+    R=1.5*1000; /* in parsec */
+    m=M/20000.0; /* mass per star */
+
+    /* set Aaserth Parameters */
     eta=0.02;
-    n=20000;
-    tmax=5; 
+    n=20000; 
     episqr=0.25;
-    Eanalytic=-3*PI/64*G*M*M/R*pow(978462,2); /* in solarmass*(km/s)^2 */
-    
+    Eanalytic=-3*PI/64*G*M*M/R; /* in newmass*(parsec/yr)^2 */
+
+    /* next, set integration parameters */
+    mstep = 5;                /* number of steps to take  */
+    nout = 1;                   /* steps between outputs    */
+    dt = 5;            /* timestep for integration, in year */
+    tmax=dt*100;
+
+
     /* store init.dat */
     FILE *fp;
     fp=fopen("init.dat","w+");
@@ -54,24 +64,22 @@ char *argv[];
     fprintf(fp,"%-7s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s%-14.4s\n","index","r component","x component","y component","z component","speed","vx component","vy component","vz component","Energy");
     for (int i=0;i<n;i++) 
     {
-        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",i,r[i],x[i],y[i],z[i],V[i],u[i],v[i],w[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
+        fprintf(fp,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4E\n",i,r[i],x[i],y[i],z[i],V[i],u[i],v[i],w[i],E[i]); /* this prints out the index of the star, r, x, y, z, V, v, w, u, v component of the star */
     }
     fclose(fp); 
+
+
+    /* write inital condition files for aaserth process */
     FILE *fp2;
     fp2=fopen("init_aaserth.data","w+");
     fprintf(fp2,"%-7d%-14.4f%-14.4f%-14.4f%-14.4f\n",n,eta,dt,tmax,episqr);
     for (int i=0;i<n;i++)
     {
-        fprintf(fp2,"%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
+        fprintf(fp2,"%-14.4E%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f%-14.4f\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
     } /* mass, x, y, z, vx, vy, vz */
     fclose(fp2);
 
     tnow = 0.0;                 /* set initial time         */
-
-    /* next, set integration parameters */
-    mstep = 5;                /* number of steps to take  */
-    nout = 1;                   /* steps between outputs    */
-    dt = 5;            /* timestep for integration, in year */
 
     FILE *fp3;
     fp3=fopen("initplummer.data","w+");
@@ -83,9 +91,9 @@ char *argv[];
     fp4=fopen("energy.dat","w+");
     fprintf(fp4,"This file contains the energy and totol momentum calculated from leapfrog code with time step as 5 years and total steps as 5.\n");
     fprintf(fp4,"This is the analytic energy of the plummer sphere over time: %14.4e\n",Eanalytic);
-    fprintf(fp4,"The energy is in solarmass*(km/s)^2, and the momentum is in solarmass*parsec/yr.\n");
-    fprintf(fp4,"%-14.4s%-14.4s%-14.4s\n","timenow","Energy","tot_moment");
+    fprintf(fp4,"The energy is in newmass*(parsec/yr)^2, and the momentum is in newmass*parsec/yr.\n");
     fprintf(fp4,"This is the check for momentum and energy conservation, as well as the fact that leapfrog produces energy as analytic form predicts.\n");
+    fprintf(fp4,"%-14.4s%-14.4s%-14.4s\n","timenow","Energy","tot_moment");
 
     /* now, loop performing integration */
     FILE *fp5;
@@ -96,7 +104,7 @@ char *argv[];
         if (nstep % nout == 0)          /* if time to output state  */
         {
             printenergy(E, fp4, u, v, w, tnow, n);   
-           // printstate(x, y, z, u, v, w, n, fp5); /* then call output routine */
+            printstate(x, y, z, u, v, w, n, fp5); /* then call output routine */
         }
         leapstep(r, x, y, z, V, w, v, u, E, n, dt); /* take integration step    */
         tnow = tnow + dt;           /* and update value of time */
@@ -104,7 +112,7 @@ char *argv[];
     if (mstep % nout == 0) /* if last output wanted    */
     {
         printenergy(E, fp4, u, v, w, tnow, n); 
-        // printstate(x, y, z, u, v, w, n, tnow, fp5); /* output last step */
+        printstate(x, y, z, u, v, w, n, tnow, fp5); /* output last step */
     }              
     fclose(fp4);
     fclose(fp5);
@@ -130,10 +138,9 @@ int n;
     for (int i=0;i<n;i++){
         double q;
         double X1, X2, X3, X4, X5, X6, X7;
-        double U;
         double Ve;
         X1=rand_0_1();
-        r[i]=sqrt(R*R*pow(X1,2.0d/3.0d)/(1-pow(X1,2.0d/3.0d))); /* radius in parsec */
+        r[i]=sqrt(R*R*pow(X1,2.0f/3.0f)/(1-pow(X1,2.0f/3.0f))); /* radius in parsec */
         X2=rand_0_1();
         z[i]=(1-2*X2)*r[i]; /*  z component */
         X3=rand_0_1();
@@ -153,9 +160,20 @@ int n;
         w[i]=(1-2*X6)*V[i]; /* w component */
         u[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*cos(2*PI*X7); /* u component */
         v[i]=pow(V[i]*V[i]-w[i]*w[i],0.5)*sin(2*PI*X7); /* v component */
-        U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5); /* in (parsec/year)^2 */
-        E[i]=U+V[i]*V[i]/2;
-        E[i]=E[i]*pow(978462,2); /* in (km/s)^2 */
+    }
+    
+    /* calculate energy */
+    for (int j=0;j<n;j++) 
+    {
+        double U=0;
+        for (int k=0;k<n;k++)
+        {
+            if (k!=j){
+                double r_jk=sqrt(pow(x[k]-x[j],2)+pow(y[k]-y[j],2)+pow(z[k]-z[j],2));
+                U=U-G*m/r_jk;
+            }
+        }
+        E[j]=U+V[j]*V[j]/2;
     }
 }
 
@@ -220,7 +238,6 @@ double dt;                  /* timestep for integration */
     }
     U=-G*M/R*pow(1+(r[i]/R)*(r[i]/R),-0.5); /* in (parsec/year)^2 */
     E[i]=U+V[i]*V[i]/2;
-    E[i]=E[i]*pow(978462,2); /* in km/s */
 
 }
 
@@ -267,11 +284,11 @@ double z[];
 double u[];                 /* velocities of all points */
 double v[];                 
 double w[];                 
-double n;
+int n;
 FILE *fp;                   /* the file name to store everything in */ 
 {
     for (int i=0;i<n;i++){
-        fprintf(fp,"%-14.4f%E%E%E%E%E%E\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
+        fprintf(fp,"%-14.4f%-14.4E%-14.4E%-14.4E%-14.4E%-14.4E%-14.4E\n",m,x[i],y[i],z[i],u[i],v[i],w[i]);
     }
 }
 
@@ -297,12 +314,12 @@ int n;
     double MomentumTotal=0;
     for (int i=0;i<n;i++)
     {
-        Energy+=E[i]; /* (km/s)^2 */
-        uMomentum+=u[i];
-        vMomentum+=v[i];
-        wMomentum+=w[i];
+        Energy=Energy+E[i]; /* (parsec/year)^2 */
+        uMomentum=uMomentum+u[i];
+        vMomentum=vMomentum+v[i];
+        wMomentum=wMomentum+w[i];
     }
-    Energy=Energy*m; /* in solarmass*(km/s)^2 */
+    Energy=Energy*m; /* in newmass*(parsec/yr)^2 */
     MomentumTotal=sqrt(pow(uMomentum,2)+pow(wMomentum,2)+pow(vMomentum,2))*m;
     fprintf(fp, "%-14.4f%-17.7E%-17.7E\n",tnow,Energy,MomentumTotal);
 }
