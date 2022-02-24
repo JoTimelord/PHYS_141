@@ -51,8 +51,8 @@ char *argv[];
     /* next, set integration parameters */
     mstep = 5;                /* number of steps to take  */
     nout = 1;                   /* steps between outputs    */
-    dt = 5;            /* timestep for integration, in year */
-    tmax=dt*100;
+    dt = 10000;            /* timestep for integration, in year */
+    tmax=dt*10000;
 
 
     /* store init.dat */

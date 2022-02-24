@@ -1,11 +1,11 @@
 This file contains the energy and totol momentum calculated from leapfrog code with time step as 5 years and total steps as 5.
-The energy is in solarmass*(km/s)^2, and the momentum is in solarmass*parsec/yr.
-This is the analytic energy of the plummer sphere over time:    -4.2224e+15
-time          Ener          tot_          
+This is the analytic energy of the plummer sphere over time:    -1.9813e-11
+The energy is in newmass*(parsec/yr)^2, and the momentum is in newmass*parsec/yr.
 This is the check for momentum and energy conservation, as well as the fact that leapfrog produces energy as analytic form predicts.
-0.0000        -1.2684964E+15   3.3318034E+04    
-5.0000        -1.2684964E+15   3.3328427E+04    
-10.0000       -1.2684964E+15   3.3338851E+04    
-15.0000       -1.2684964E+15   3.3349307E+04    
-20.0000       -1.2684964E+15   3.3359795E+04    
-25.0000       -1.2684964E+15   3.3370315E+04    
+time          Ener          tot_          
+0.0000        -5.9551115E-11   1.5067671E-10    
+5.0000        -5.9551115E-11   1.4276719E-10    
+10.0000       -5.9551115E-11   1.3558904E-10    
+15.0000       -5.9551115E-11   1.2926406E-10    
+20.0000       -5.9551115E-11   1.2392288E-10    
+25.0000       -5.9551115E-11   1.1969716E-10    

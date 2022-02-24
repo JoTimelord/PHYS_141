@@ -253,15 +253,15 @@ double refPos[kNumDims], temp[kNumDims];
         totalMass += masses[i];
 
 //        cross(totalAngularMomentum, positions[i], masses[i]*velocity)
-	refPos[0] = positions[i][0];
-	refPos[1] = positions[i][1];
-	refPos[2] = positions[i][2];
+        refPos[0] = positions[i][0];
+        refPos[1] = positions[i][1];
+        refPos[2] = positions[i][2];
         cross(temp, refPos, masses[i]*velocity)
         totalAngularMomentum[0] += temp[0];
         totalAngularMomentum[1] += temp[1];
         totalAngularMomentum[2] += temp[2];
 
-        fprintf(outputFile, "%14.7g %14.7g %14.7g 1\n", positions[i][0],
+        fprintf(outputFile, "%14.7g %14.7g %14.7g \n", positions[i][0],
             positions[i][1], positions[i][2]);
 
     }
